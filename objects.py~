@@ -1,9 +1,0 @@
-# coding: utf-8
-
-class Warp:
-	def onContact(self):
-		game.currentMap = True
-	def onPress(self):
-		pass
-	def onTalk(self):
-		pass
