@@ -1,0 +1,751 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"ran",
+				"randint"
+			],
+			[
+				"spri",
+				"spritesheet"
+			],
+			[
+				"spr",
+				"spritesheet"
+			],
+			[
+				"spriteS",
+				"spritesheet"
+			],
+			[
+				"sprite",
+				"spritesheet"
+			],
+			[
+				"__",
+				"__init__"
+			],
+			[
+				"visi",
+				"visibleInstances"
+			],
+			[
+				"instance",
+				"instanceList"
+			],
+			[
+				"import",
+				"importlib"
+			],
+			[
+				"ins",
+				"instType"
+			],
+			[
+				"scree",
+				"screenBuffer"
+			],
+			[
+				"next",
+				"nextRoom"
+			],
+			[
+				"n",
+				"nextTile"
+			],
+			[
+				"nex",
+				"nextRoom"
+			],
+			[
+				"conv",
+				"convert_alpha"
+			],
+			[
+				"scr",
+				"screen"
+			],
+			[
+				"view",
+				"viewPos"
+			],
+			[
+				"pr",
+				"properties"
+			],
+			[
+				"proper",
+				"property	New Property"
+			],
+			[
+				"pro",
+				"property	New Property"
+			],
+			[
+				"prop",
+				"properties"
+			],
+			[
+				"tile",
+				"tilePos"
+			],
+			[
+				"imag",
+				"imageSpeed"
+			],
+			[
+				"firs",
+				"firstPermissionTile"
+			],
+			[
+				"permis",
+				"permissionMap"
+			],
+			[
+				"per",
+				"permissionMap"
+			],
+			[
+				"arr",
+				"arrowPressed"
+			],
+			[
+				"key",
+				"keyboard"
+			],
+			[
+				"ima",
+				"imageIndex"
+			],
+			[
+				"ke",
+				"keyboard"
+			],
+			[
+				"set",
+				"setNextTile"
+			],
+			[
+				"inst",
+				"instanceList"
+			],
+			[
+				"in",
+				"instanceList"
+			],
+			[
+				"counter",
+				"tileCounter"
+			],
+			[
+				"scre",
+				"screenBuffer"
+			],
+			[
+				"screen",
+				"screenBuffer"
+			],
+			[
+				"es",
+				"esHoraOFecha"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "main.py",
+			"settings":
+			{
+				"buffer_size": 604,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "maps.py",
+			"settings":
+			{
+				"buffer_size": 4448,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "maps/004.py",
+			"settings":
+			{
+				"buffer_size": 506,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "utils.py",
+			"settings":
+			{
+				"buffer_size": 203,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "# coding: utf-8\n\nimport pygame\nfrom rooms import *\nfrom maps import *\nfrom keyboard import *\nfrom hero import *\n\n\nclass Screen:\n\n	def __init__(self,(w,h),scale,full):\n		self.size = [w,h]\n		self.scale = scale\n		self.windowSize = [w*scale,h*scale]\n		self.full = full\n		self.viewPos = [0,0]\n		pygame.display.init()\n		pygame.font.init()\n		pygame.display.set_caption(\"The Pykemon Engine\")\n		self.screen = pygame.display.set_mode((self.size[0]*self.scale,self.size[1]*self.scale), pygame.DOUBLEBUF, 32)\n		self.screenBuffer = pygame.Surface(self.size)\n\n	def changeSize(self,how):\n		pygame.display.quit()\n		pygame.display.init()\n		self.size[0] += how*32\n		self.size[1] += how*32\n		self.windowSize = [self.size[0]*self.scale,self.size[1]*self.scale]\n		self.screen = pygame.display.set_mode((self.size[0]*self.scale,self.size[1]*self.scale), pygame.DOUBLEBUF, 32)\n		self.screenBuffer = pygame.Surface(self.size)\n\n	def increaseSize(self):\n		self.changeSize(1)\n\n	def decreaseSize(self):\n		self.changeSize(-1)\n\n\nclass GameContext:\n\n	def __init__(self, screen=Screen((240,144),2,False), hero=Hero(), key = Keyboard()):\n		self.screen = screen\n		 # Música\n		pygame.mixer.pre_init(44100,-16,2,1024)\n		pygame.mixer.init()\n		pygame.mixer.music.load(\"music/littleroot_final.mp3\")\n		pygame.mixer.music.play(-1)\n		\n		self.room = Room(Map(\"004.tmx\"),[])\n		self.hero = hero\n		self.key = key\n		self.quit = False\n		self.screen.viewPos = [-self.hero.tilePos[0]*16+(self.screen.size[0]/16-1)/2*16,-self.hero.tilePos[1]*16+(self.screen.size[1]/16-1)/2*16]\n\n	def update(self):\n		############################\n		##### 1 - Parte lógica #####\n		############################\n		# Comprobamos si hay que salir del juego y ya de paso actualizamos el teclado\n		self.key.update(self)\n		#print self.room.content.instanceList\n\n		#############################\n		##### 2 - Parte gráfica #####\n		#############################\n		# Dibujamos la room y todo lo que contiene en el buffer. Dibujamos al héroe\n		if isinstance(self.room.content, Map):\n			# Actualizamos el héroe\n			self.hero.update(self.key, self.room)	\n			# Dibujamos el mapa que hay por debajo del héroe\n			self.screen.screenBuffer.blit(self.room.roomSurfaces[0].convert_alpha(),self.screen.viewPos)\n			# Posicionamiento de las siguiente rooms (BETA)\n			if self.room.nextRoom[0] != None:\n				nextRoomPos = (self.screen.viewPos[0], self.screen.viewPos[1]-self.room.nextRoom[0].height*16)\n				self.screen.screenBuffer.blit(self.room.nextRoom[0].roomSurfaces[0],nextRoomPos,(0,0,self.room.nextRoom[0].width*16,self.room.nextRoom[0].height*16))\n				self.screen.screenBuffer.blit(self.room.nextRoom[0].roomSurfaces[1].convert_alpha(),nextRoomPos,(0,0,self.room.nextRoom[0].width*16,self.room.nextRoom[0].height*16))\n			if self.room.nextRoom[1] != None:\n				nextRoomPos = (self.screen.viewPos[0], self.screen.viewPos[1]+self.room.nextRoom[1].height*16-32)\n				self.screen.screenBuffer.blit(self.room.nextRoom[1].roomSurfaces[0],nextRoomPos,(0,0,self.room.nextRoom[1].width*16,self.room.nextRoom[1].height*16))\n				self.screen.screenBuffer.blit(self.room.nextRoom[1].roomSurfaces[1].convert_alpha(),nextRoomPos,(0,0,self.room.nextRoom[1].width*16,self.room.nextRoom[1].height*16))\n			if self.room.nextRoom[2] != None:\n				nextRoomPos = (self.screen.viewPos[0]-self.room.nextRoom[2].width*16, self.screen.viewPos[1])\n				self.screen.screenBuffer.blit(self.room.nextRoom[2].roomSurfaces[0].convert_alpha(),nextRoomPos,(0,0,self.room.nextRoom[2].width*16,self.room.nextRoom[2].height*16))\n			if self.room.nextRoom[3] != None:\n				nextRoomPos = (self.screen.viewPos[0]+self.room.nextRoom[3].width*16-32, self.screen.viewPos[1])\n				self.screen.screenBuffer.blit(self.room.nextRoom[3].roomSurfaces[0].convert_alpha(),nextRoomPos,(0,0,self.room.nextRoom[3].width*16,self.room.nextRoom[3].height*16))\n			# Actualizamos y dibujamos las instancias por encima del héroe\n			bottomInstances = []\n			for i in self.room.instanceList:\n				i.update(self)\n				if i in self.room.visibleInstances:\n					if i.tilePos[1] < self.hero.tilePos[1]:\n						self.drawOnRoom(i)\n					else:\n						bottomInstances.append(i)\n			# Dibujamos al héroe\n			self.drawOnRoom(self.hero)\n			# Dibujamos las instancias por debajo del héroe\n			for i in bottomInstances:\n				self.drawOnRoom(i)\n			# Actualizamos la room\n			self.room.update()\n			# Comprobamos si se pisa, toca o habla con alguna instancia\n			for i in self.room.instanceList:\n				if self.key.keyPressed[\"A\"] and self.hero.facingTile() == i.tilePos:\n					i.onTalk(self)\n			# Dibujamos el mapa que hay por encima del héroe\n			self.screen.screenBuffer.blit(self.room.roomSurfaces[1].convert_alpha(),self.screen.viewPos)\n			# Dibujamos un texto de prueba ((DEBUG))\n			self.font = pygame.font.SysFont(\"Monospace\",10)\n			textSurface = self.font.render(\"Esto es una prueba.\",True,(0,0,0))\n			self.screen.screenBuffer.blit(textSurface,(0,0))\n			# Seguimos al héroe con el view\n			self.screen.viewPos = [-self.hero.rect.x+(self.screen.size[0]/16-1)/2*16,-self.hero.rect.y+(self.screen.size[1]/16-1)/2*16]\n\n	def drawOnRoom(self,instance):\n		\"\"\"\n		Dibuja un objeto (sprite) en la room.\n		\"\"\"\n		x = instance.rect.left-instance.spritesheetPos[0]+self.screen.viewPos[0]\n		y = instance.rect.top-instance.spritesheetPos[1]+self.screen.viewPos[1]\n		if instance.onGrass:\n			self.screen.screenBuffer.blit(instance.image,(x,y),(0,0,32,26))\n			self.screen.screenBuffer.blit(pygame.image.load(\"sprites/grass.png\").convert_alpha(),(x+7,y+18))\n		else:\n			self.screen.screenBuffer.blit(instance.image,(x,y))\n\n	def showMessage(self,s):\n		\"\"\"\n		Muestra un mensaje convencional por pantalla.\n		\"\"\"\n		print s\n\n	def toRoomCoord(self,x):\n		pass\n\n	def toSurfaceCoord(self,x):\n		pass",
+			"file": "classes.py",
+			"file_size": 5831,
+			"file_write_time": 130241005651742123,
+			"settings":
+			{
+				"buffer_size": 5680,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "maps/004.tmx",
+			"settings":
+			{
+				"buffer_size": 21499,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "keyboard.py",
+			"settings":
+			{
+				"buffer_size": 2100,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "hero.py",
+			"settings":
+			{
+				"buffer_size": 5938,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "objects.py",
+			"settings":
+			{
+				"buffer_size": 2261,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "rooms.py",
+			"settings":
+			{
+				"buffer_size": 3309,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 0.0,
+		"history":
+		[
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/miki/pykemon/maps.py",
+		"/home/miki/pykemon/resources.py",
+		"/home/miki/pykemon/maps/004.tmx",
+		"/home/miki/pykemon/maps/006.tmx",
+		"/home/miki/pykemon/documentation/index.html",
+		"/home/miki/pykemon/maps/001.tmx",
+		"/home/miki/pykemon/documentation/assets/blueprint-css/screen.css",
+		"/home/miki/pykemon/documentation/assets/blueprint-css/ie.css",
+		"/home/miki/pykemon/maketransparent.py",
+		"/home/miki/pykemon/classes.py",
+		"/home/miki/pykemon/objects.py",
+		"/home/miki/buitre.py",
+		"/home/miki/.config/sublime-text-3/Packages/Default/Preferences.sublime-settings"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"print",
+			"room",
+			"keyboard",
+			"isMoving",
+			"facing",
+			"i",
+			"self",
+			"tileCounter",
+			"walkDelay",
+			"tileCounter",
+			"walkDelay",
+			"hitBlock",
+			"limits",
+			"northLimit",
+			"northRoomPos",
+			"permissionMap",
+			"room",
+			"self.",
+			"room",
+			"self.",
+			"limits",
+			"\")\n",
+			"properties",
+			"1",
+			"print",
+			"permissionMap",
+			":\n",
+			"spriteIndex",
+			"imageIndex",
+			"hitBlock",
+			"imageSpeed",
+			"isZero",
+			"3",
+			"()\n",
+			"keyboard.keyPRessed",
+			"e.arrow",
+			".key",
+			"key",
+			"anyKey",
+			".keyPressed",
+			".key",
+			".delay",
+			"and",
+			"tilepos",
+			"Hero",
+			"id",
+			"0",
+			"3",
+			"0",
+			"self.rect",
+			"self.hero",
+			"m",
+			"__update__",
+			"facing",
+			"setNextTile",
+			"self"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"nextRoomPos",
+			"self.room",
+			"self.hero.",
+			"self.room",
+			"self.hero.",
+			"keyboard.arrowPressed",
+			"e.key",
+			".arrow",
+			"anyArrow",
+			".arrowPressed",
+			".arrow",
+			".walkDelay",
+			"1",
+			"2",
+			"3",
+			"content",
+			"update"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "main.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 604,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								218,
+								218
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "maps.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4448,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4081,
+								4081
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1700.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "maps/004.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 506,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								277,
+								277
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "utils.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 203,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								186,
+								186
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "classes.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5680,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5512,
+								5512
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1345.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "maps/004.tmx",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 21499,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/XML/XML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 4507.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "keyboard.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2100,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1583,
+								1583
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 94.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "hero.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5938,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3868,
+								3868
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 930.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "objects.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2261,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								290,
+								290
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "rooms.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3309,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1166,
+								1166
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 135.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 100.0
+	},
+	"project": "pykemon.sublime-project",
+	"replace":
+	{
+		"height": 64.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
