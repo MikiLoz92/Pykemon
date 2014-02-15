@@ -1,0 +1,79 @@
+# coding: utf-8
+
+import pygame
+import os
+import xml.etree.ElementTree as ET
+
+class Tileset:
+	"""
+	Define un tileset con un Surface s, que por defecto está vacío (utiliza el método "load" para cargar uno del FS o el método loadFromFolder para cargar un archivo desde la carpeta por defecto, que es "tilesets".
+	"""
+	def __init__(self, fname, sep = 0, wtile = 16, htile = 16, nrows = 1024, ncols = 8):
+		try:
+			self.load(fname)
+		except:
+			self.loadFromFolder(fname)
+		self.process(sep,wtile,htile,nrows,ncols)
+	
+	def load(self, dest):
+		self.s = pygame.image.load(dest)
+	
+	def loadFromFolder(self, fname):
+		self.s = pygame.image.load(os.path.join("tilesets",fname))
+		#self.s.set_colorkey((255,0,255))
+		
+	def process(self,sep,wtile,htile,nrows,ncols):
+		"""
+		Convierte una imagen, dados unos parámetros de calibraje, en una lista de surfaces que conformarán el objeto tileset.
+		"""
+		self.t = []
+		y = 0
+		for i in range(nrows):
+			x = 0
+			for j in range(ncols):
+				tempS = pygame.Surface((16,16),pygame.HWSURFACE)
+				tempS.blit(self.s,(0,0),(x,y,x+wtile,y+htile))
+				tempS.set_colorkey((255,0,255))
+				tempS.set_alpha(None)
+				self.t.append(tempS)
+				x += wtile + sep
+			y += htile + sep
+
+class Map:
+	"""
+	Define un mapa con una información de mapa m, dada como una lista de listas, y un tileset t, definido como un objeto Tileset.
+	"""
+	def __init__(self, m = [], t = Tileset("001.png",1,16,16,6,6), n = ""):
+		if isinstance(m,str):
+			self.loadFromFolder(m)
+		else:
+			self.map = m
+			self.name = n
+			self.tileset = t
+			
+	def __getitem__(self,i):
+		# Funciona como [CAPA][fila][columna]
+		return self.map[i]
+	
+	def loadFromFolder(self, fname):
+		self.map = []
+		tree = ET.parse(os.path.join("maps",fname))
+		root = tree.getroot()
+		layers = root.findall("layer")
+		for i in range(len(layers)):
+			text = layers[i].findall("data")[0].text
+			l = text.split()
+			self.map.append([])
+			for j in range(len(l)):
+				if j == len(l)-1:
+					self.map[i].append(l[j].split(","))
+				else:
+					self.map[i].append(l[j].split(",")[0:-1])
+			for j in range(len(self.map[i])):
+				for k in range(len(self.map[i][0])):
+					self.map[i][j][k] = int(self.map[i][j][k])-1
+		self.name = root.findall("properties")[0].findall("property")[0].attrib["value"]
+		self.tileset = Tileset(root.findall("tileset")[0].findall("image")[0].attrib["source"].split("/")[-1])
+	
+	def clear(self):
+		self.map = []
